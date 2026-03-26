@@ -16,8 +16,8 @@ from scheduler.job import run_job
 
 print("🤖 Bot démarré...")
 
-# Exécution chaque jour à 10h
-schedule.every().day.at("10:00").do(run_job)
+# Exécution chaque jour à 9h30h
+schedule.every().day.at("09:30").do(run_job)
 
 # TEST (optionnel)
 # schedule.every(1).minutes.do(run_job)
