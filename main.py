@@ -1,5 +1,17 @@
 import schedule
 import time
+import http.server
+import socketserver
+import threading
+
+# Petit serveur pour tromper Render
+def run_server():
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", 10000), handler) as httpd:
+        httpd.serve_forever()
+
+threading.Thread(target=run_server, daemon=True).start()
+
 from scheduler.job import run_job
 
 print("🤖 Bot démarré...")
