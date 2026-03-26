@@ -1,108 +1,65 @@
-from scrapers.statarea import scrape_statarea
-from scrapers.soccervista import scrape_soccervista
-from scrapers.windrawwin import scrape_windrawwin
-from scrapers.betwizad import scrape_betwizad
-from scrapers.sportytrader import scrape_sportytrader
-from scrapers.predictz import scrape_predictz
-from scrapers.winflix import scrape_winflix
-
-from core.parser import parse_match
-from core.betwizad_parser import parse_betwizad
-
-from core.probability_engine import compute_probability
-from bot.telegram_bot import send
-
-
 def run_job():
-    print("🚀 Lancement scraping multi-sites...")
+    print("🚀 START JOB")
 
+    from scrapers.statarea import scrape_statarea
+    from scrapers.betwizad import scrape_betwizad
+    from scrapers.sportytrader import scrape_sportytrader
+    from scrapers.predictz import scrape_predictz
+
+    from core.parser import parse_match
+    from core.probability_engine import compute_probability
+    from bot.telegram_bot import send
+
+    # ================= SCRAPING =================
     raw_data = []
 
-    # =========================
-    # SCRAPING
-    # =========================
-    try:
-        raw_data += scrape_statarea()
-        print("✅ statarea OK")
-    except:
-        print("❌ statarea fail")
+    for func in [
+        scrape_statarea,
+        scrape_betwizad,
+        scrape_sportytrader,
+        scrape_predictz
+    ]:
+        try:
+            data = func()
+            print(f"✅ {func.__name__} → {len(data)}")
+            raw_data += data
+        except Exception as e:
+            print(f"❌ {func.__name__} ERROR:", e)
 
-    try:
-        raw_data += scrape_soccervista()
-        print("✅ soccervista OK")
-    except:
-        print("❌ soccervista fail")
+    print("📥 TOTAL RAW:", len(raw_data))
 
-    try:
-        raw_data += scrape_windrawwin()
-        print("✅ windrawwin OK")
-    except:
-        print("❌ windrawwin fail")
-
-    try:
-        raw_data += scrape_betwizad()
-        print("✅ betwizad OK")
-    except:
-        print("❌ betwizad fail")
-
-    try:
-        raw_data += scrape_sportytrader()
-        print("✅ sportytrader OK")
-    except:
-        print("❌ sportytrader fail")
-
-    try:
-        raw_data += scrape_predictz()
-        print("✅ predictz OK")
-    except:
-        print("❌ predictz fail")
-
-    try:
-        raw_data += scrape_winflix()
-        print("✅ winflix OK")
-    except:
-        print("❌ winflix fail")
-
-    # =========================
-    # PARSING
-    # =========================
+    # ================= PARSING =================
     parsed = []
 
     for item in raw_data:
         try:
-            # Betwizad a son parser spécifique
-            if item["site"] == "betwizad":
-                parsed += parse_betwizad([item])
-            else:
-                parsed.append(parse_match(item["raw"]))
-        except:
-            continue
+            parsed_item = parse_match(item["raw"])
+            parsed.append(parsed_item)
+        except Exception as e:
+            print("❌ PARSE ERROR:", e)
 
-    # Nettoyage (important)
-    parsed = [
-        p for p in parsed
-        if p["home"] is not None and p["away"] is not None
-    ]
+    print("📊 PARSED:", len(parsed))
 
-    print(f"📊 Matchs valides: {len(parsed)}")
+    # ================= DEBUG PARSED =================
+    for p in parsed[:5]:
+        print("➡️", p)
 
-    # =========================
-    # CALCUL PROBABILITÉ
-    # =========================
+    # ================= PROBA =================
     results = compute_probability(parsed)
 
-    # =========================
-    # TELEGRAM
-    # =========================
+    print("🎯 RESULTS:", len(results))
+
+    for r in results[:5]:
+        print("🔥", r)
+
+    # ================= TELEGRAM =================
     if not results:
-        send("❌ Aucune prédiction fiable aujourd’hui (multi-sites)")
-        return
+        send("❌ DEBUG: Aucun résultat")
+    else:
+        msg = "🔥 DEBUG MATCHS\n\n"
+        for match, prob in results[:5]:
+            msg += f"{match} → {round(prob*100,2)}%\n"
 
-    msg = "🔥 PRÉDICTIONS ULTRA FIABLES (IA + Multi-sites)\n\n"
+        send(msg)
 
-    for match, prob in results:
-        msg += f"⚽ {match}\n📊 {round(prob*100,2)}%\n\n"
-
-    send(msg)
-
-    print("✅ Message envoyé")
+    print("✅ END JOB")
