@@ -65,5 +65,9 @@ def run_job():
             msg += f"{match} → {round(prob*100,2)}%\n"
 
         send(msg)
-
+      
+      print("RAW DATA:")
+      for item in raw_data[:10]:
+          print(item)
+          
     print("✅ END JOB")
