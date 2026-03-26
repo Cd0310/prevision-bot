@@ -43,7 +43,7 @@ def compute_probability(matches):
             v["away"]/total
         )
 
-        if prob >= 0.70:  # ⚠️ ajusté réaliste
+        if prob >= 0.40:  # ⚠️ ajusté réaliste
             results.append((k, prob))
 
     return results
