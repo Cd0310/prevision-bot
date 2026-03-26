@@ -63,3 +63,17 @@ def run_job():
         send(msg)
 
     print("✅ END JOB")
+    
+    print("📥 RAW DATA SAMPLE:")
+
+for item in raw_data[:5]:
+    print(item)
+    
+    print("📊 PARSED SAMPLE:")
+
+for p in parsed[:5]:
+    print(p)
+    
+    print("🎯 TEST PROBA:")
+for p in parsed[:5]:
+    print(p, "→", compute_probability([p]))
