@@ -10,70 +10,60 @@ def run_job():
     from core.probability_engine import compute_probability
     from bot.telegram_bot import send
 
-    # ================= SCRAPING =================
-    raw_data = []
+    # =========================
+    # SCRAPING
+    # =========================
+    raw_data = []  # ✅ OBLIGATOIRE
 
-    for func in [
+    scrapers = [
         scrape_statarea,
         scrape_betwizad,
         scrape_sportytrader,
         scrape_predictz
-    ]:
+    ]
+
+    for func in scrapers:
         try:
             data = func()
-            print(f"✅ {func.__name__} → {len(data)}")
+            print(f"✅ {func.__name__}: {len(data)}")
             raw_data += data
         except Exception as e:
-            print(f"❌ {func.__name__} ERROR:", e)
+            print(f"❌ {func.__name__}:", e)
 
     print("📥 TOTAL RAW:", len(raw_data))
 
-    # ================= PARSING =================
+    # =========================
+    # PARSING
+    # =========================
     parsed = []
 
     for item in raw_data:
         try:
-            parsed_item = parse_match(item["raw"])
-            parsed.append(parsed_item)
+            parsed.append(parse_match(item["raw"]))
         except Exception as e:
-            print("❌ PARSE ERROR:", e)
+            print("❌ PARSE:", e)
+
+    parsed = [p for p in parsed if p["home"] and p["away"]]
 
     print("📊 PARSED:", len(parsed))
 
-    # ================= DEBUG PARSED =================
-    for p in parsed[:5]:
-        print("➡️", p)
-
-    # ================= PROBA =================
+    # =========================
+    # PROBA
+    # =========================
     results = compute_probability(parsed)
 
     print("🎯 RESULTS:", len(results))
 
-    for r in results[:5]:
-        print("🔥", r)
-
-    # ================= TELEGRAM =================
+    # =========================
+    # TELEGRAM
+    # =========================
     if not results:
         send("❌ DEBUG: Aucun résultat")
     else:
-        msg = "🔥 DEBUG MATCHS\n\n"
+        msg = "🔥 MATCHS\n\n"
         for match, prob in results[:5]:
             msg += f"{match} → {round(prob*100,2)}%\n"
 
         send(msg)
 
     print("✅ END JOB")
-    
-    print("📥 RAW DATA SAMPLE:")
-
-for item in raw_data[:5]:
-    print(item)
-    
-    print("📊 PARSED SAMPLE:")
-
-for p in parsed[:5]:
-    print(p)
-    
-    print("🎯 TEST PROBA:")
-for p in parsed[:5]:
-    print(p, "→", compute_probability([p]))
