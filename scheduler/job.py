@@ -10,10 +10,8 @@ def run_job():
     from core.probability_engine import compute_probability
     from bot.telegram_bot import send
 
-    # =========================
-    # SCRAPING
-    # =========================
-    raw_data = []  # ✅ OBLIGATOIRE
+    # ================= SCRAPING =================
+    raw_data = []
 
     scrapers = [
         scrape_statarea,
@@ -28,13 +26,16 @@ def run_job():
             print(f"✅ {func.__name__}: {len(data)}")
             raw_data += data
         except Exception as e:
-            print(f"❌ {func.__name__}:", e)
+            print(f"❌ {func.__name__}: {e}")
 
     print("📥 TOTAL RAW:", len(raw_data))
 
-    # =========================
-    # PARSING
-    # =========================
+    # 🔥 DEBUG IMPORTANT
+    print("📥 RAW DATA SAMPLE:")
+    for item in raw_data[:5]:
+        print(item)
+
+    # ================= PARSING =================
     parsed = []
 
     for item in raw_data:
@@ -47,16 +48,12 @@ def run_job():
 
     print("📊 PARSED:", len(parsed))
 
-    # =========================
-    # PROBA
-    # =========================
+    # ================= PROBA =================
     results = compute_probability(parsed)
 
     print("🎯 RESULTS:", len(results))
 
-    # =========================
-    # TELEGRAM
-    # =========================
+    # ================= TELEGRAM =================
     if not results:
         send("❌ DEBUG: Aucun résultat")
     else:
@@ -65,9 +62,5 @@ def run_job():
             msg += f"{match} → {round(prob*100,2)}%\n"
 
         send(msg)
-      
-      print("RAW DATA:")
-      for item in raw_data[:10]:
-          print(item)
-          
+
     print("✅ END JOB")
